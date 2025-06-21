@@ -2,7 +2,7 @@
 
 import { Player } from '@remotion/player';
 import { useSearchParams } from 'next/navigation';
-import { useMemo } from 'react';
+import { Suspense, useMemo } from 'react';
 import { MyVideo } from '../Video';
 
 type VideoData = {
@@ -12,7 +12,7 @@ type VideoData = {
   durationInFrames: number;
 };
 
-export default function VideoPage() {
+function VideoContent() {
   const searchParams = useSearchParams();
   const videoData: VideoData[] = useMemo(() => {
     try {
@@ -27,7 +27,7 @@ export default function VideoPage() {
   }, [searchParams]);
 
   const totalDuration = useMemo(
-    () => videoData.reduce((sum, item) => sum + (item.durationInFrames || 0), 0),
+    () => videoData.reduce((sum: number, item: VideoData) => sum + (item.durationInFrames || 0), 0),
     [videoData]
   );
 
@@ -67,7 +67,7 @@ export default function VideoPage() {
         </div>
         <div className="space-y-4">
           <h2 className="text-xl font-bold">Video Segments</h2>
-          {videoData.map((segment, index) => (
+          {videoData.map((segment: VideoData, index: number) => (
             <div key={index} className="p-4 bg-gray-800 rounded shadow">
               <p className="font-semibold">{segment.speaker}</p>
               <p className="mb-2">{segment.text}</p>
@@ -79,5 +79,22 @@ export default function VideoPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function VideoPage() {
+  return (
+    <Suspense 
+      fallback={
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p>Loading video player...</p>
+          </div>
+        </div>
+      }
+    >
+      <VideoContent />
+    </Suspense>
   );
 }
